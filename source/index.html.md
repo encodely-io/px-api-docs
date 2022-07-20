@@ -2,13 +2,11 @@
 title: API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
-  - shell
-  - ruby
-  - python
-  - javascript
+  - http: REST
+  - javascript--react: React
+  - javascript--browser: Javascript
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
   - <a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a>
 
 includes:
@@ -25,69 +23,68 @@ meta:
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
-
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
-
-This example API documentation page was created with [Slate](https://github.com/slatedocs/slate). Feel free to edit it and use it as a base for your own API's documentation.
+Platform-X API documentiation
 
 # Authentication
 
-> To authorize, use this code:
+All authentication except direct username/password auth is initiated by calling the `/authorize` or `/authorise` endpoints. If you wish to implement your own authentication and authorisation interface, this section is for you.
 
-```ruby
-require 'kittn'
+## Authorization Code Flow with PKCE
+This flow is **Highly Recommended** for mobile or SPA's.
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
+```http
+GET /authorize?client_id=my-project&response_type=code&redirect_url=https://www.my-app.com&code_challenge=xyz&state=abc HTTP/1.1
 ```
 
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
+```http
+HTTP/1.1 302 Found
+Location: https://my-project.grocket.dev?client_id=my-project&response_type=code&redirect_url=https://www.my-app.com&code_challenge=xyz&state=abc
 ```
 
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here" \
-  -H "Authorization: meowmeowmeow"
+```javascript--react
+import { useAuth } from '@platformx/auth';
+
+const MyComponent = (props) => {
+    const { signinWithRedirect } = useAuth();
+
+    signinWithRedirect();
+}
 ```
 
-```javascript
-const kittn = require('kittn');
+```javascript--browser
+const px = require('@platformx/auth');
 
-let api = kittn.authorize('meowmeowmeow');
+px.signinWithRedirect();
 ```
 
-> Make sure to replace `meowmeowmeow` with your API key.
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+### Query Parameters
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
+Parameter | Default | Description
+--------- | ------- | ---------
+client_id |  | **Required**. The unique identifier for your accounts project
+response_type |  | **Required**. Suported options are `code` or `token`
+redirect_uri |  | **Required**. A registered URL that the authorisation server will redirect to after successful authorisation.
+code_challenge |  | A challenge that has been generated from the `code_verifier`. **Required** when using the `code` option for the `response_type` parameter. 
+code_challenge_method | S256 | At present, S256 is the only supported method.
+scope | | A space-delimited, case-sensitive list of requested scopes. Although this list represents scopes being requested, the response may contain a subset of `scopes` that was granted by the client.
+audience | | The unique identifier of the API that the client is requesting acceess to.
+state | | **Highly Recommended** An opaque value used to maintain state between the request and response. The parameter is highly recommended for preventing cross-site request forgery. SDK's will automatically generate this if no value is provided.
 
-`Authorization: meowmeowmeow`
 
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+
+<aside class="success">
+Where possible, use the recommended options to keep your users secure and safe.
 </aside>
+
+
+
+
+### HTTP Request
 
 # Kittens
 
 ## Get All Kittens
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
 
 ```shell
 curl "http://example.com/api/kittens" \
@@ -101,7 +98,7 @@ let api = kittn.authorize('meowmeowmeow');
 let kittens = api.kittens.get();
 ```
 
-> The above command returns JSON structured like this:
+> Response
 
 ```json
 [
@@ -140,20 +137,6 @@ Remember — a happy kitten is an authenticated kitten!
 </aside>
 
 ## Get a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
 
 ```shell
 curl "http://example.com/api/kittens/2" \
@@ -195,19 +178,6 @@ ID | The ID of the kitten to retrieve
 
 ## Delete a Specific Kitten
 
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
 
 ```shell
 curl "http://example.com/api/kittens/2" \
