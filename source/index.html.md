@@ -27,10 +27,93 @@ Platform-X API documentiation
 
 # Authentication
 
-All authentication except direct username/password auth is initiated by calling the `/authorize` or `/authorise` endpoints. If you wish to implement your own authentication and authorisation interface, this section is for you.
+All authentication methods except direct username/password is initiated by calling the `/authorize` endpoint. If you wish to implement your own authentication and authorisation interface, this section is for you.
+
+
+
+## Username and Password
+
+Authenticate users directly from your application without redirects. This endpoint will return an access token upon a successful authentication. 
+
+```http
+POST /auth/signin-with-password HTTP/1.1
+Content-Type: application/json
+
+{
+  "username": "john.doe@sample.com",
+  "password": "Swnv6p3J17Nsy%4uYeTK",
+}
+
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ 
+  "access_token": "...",
+  "userId": "89fde2dd-9e69-4d23-a5b0-9ed821ea8588",
+  "hasOnboarded": true,
+  "isMFAEnrolled": false,
+  "identity": {
+    "id": "24baa441-45c4-4c5c-9bbb-a3a0d6437c34",
+    "provider": "password",
+    "username": "john.doe@sample.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "name": "John Doe",
+    "isVerified": true,
+    "hasOnboarded": true
+  },
+  custom: {
+    ...
+  }
+}
+```
+
+```javascript--react
+import { useAuth } from '@platformx/auth';
+
+const MyComponent = (props) => {
+  const { signinWithUsernameAndPassword } = useAuth();
+
+  const handleFormSubmit = ({ username, password }) => {
+    const response = await signinWithUsernameAndPassword({ username, password });
+  }
+  
+  // ...
+}
+```
+
+```javascript--browser
+const px = require('@platformx/auth');
+
+const response = await px.signinWithUsernameAndPassword({ username, password });
+```
+### Parameters
+
+Parameter | Default | Description
+--------- | ------- | ---------
+username |  | **Required**. Username, email or phone number
+password |  | **Required**. 
+audience |  | The unique identifier of the API that the client is requesting acceess to. Defaults to your authorization server. May also be one of your registered API's. 
+response_type | token | **Required**. Suported options are `code` or `token`
+redirect_uri |  | **Required**. A registered URL that the authorisation server will redirect to after successful authentication.
+code_challenge |  | A challenge that has been generated from the `code_verifier`. **Required** when using the `code` option for the `response_type` parameter. 
+code_challenge_method | S256 | At present, S256 is the only supported method.
+state | | **Highly Recommended** An opaque value used to maintain state between the request and response. The parameter is highly recommended for preventing cross-site request forgery. SDK's will automatically generate this if no value is provided.
+
+
+<aside class="info">
+The API response example provided contains additional meta data for an identity that typically comes from oAuth social providers, however these properties can be updated for a `password` user via the /user endpoint methods. 
+</aside>
+
+<aside class="warning">
+This authentication method is heavily rate limited for untrusted applications to avoid abuse. 
+</aside>
+
 
 ## Authorization Code Flow with PKCE
-This flow is **Highly Recommended** for mobile or SPA's.
 
 ```http
 GET /authorize?client_id=my-project&response_type=code&redirect_url=https://www.my-app.com&code_challenge=xyz&state=abc HTTP/1.1
@@ -57,6 +140,7 @@ const px = require('@platformx/auth');
 px.signinWithRedirect();
 ```
 
+This flow is **Highly Recommended** for mobile or SPA's.
 
 ### Query Parameters
 
